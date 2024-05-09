@@ -27,7 +27,6 @@ public class App
            }
            String[] en = entrada.split(" ");
 
-
                 if(p&&!en[0].equals("USE")){
                     System.out.println("Inicialice la base de datos");
                     p=false;
