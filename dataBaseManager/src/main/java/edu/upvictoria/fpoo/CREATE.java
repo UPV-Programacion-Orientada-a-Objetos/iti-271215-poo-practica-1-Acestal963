@@ -36,9 +36,8 @@ public class CREATE     {
             writer.write(tabla);
             writer.write("\n");
             for(int i=0;i<columna_individual.length;i++){
-                String[] datos=null;
                 columna_individual[i]=columna_individual[i].trim();
-                datos=columna_individual[i].trim().split(" ");
+                String[] datos=columna_individual[i].trim().split(" ");
                 if(validar_tipo_de_datos(datos[1].trim())){
                     writer.write(datos[0]+"\t"+datos[2]+" "+datos[3]+"\t"+datos[1].trim());
                 }else{
@@ -50,7 +49,7 @@ public class CREATE     {
             }
             writer.close();
         }catch(IOException e){
-            System.out.println("ERROR: TABLE NOT CREATED");
+            //System.out.println("ERROR: TABLE NOT CREATED");
         }
 
         if(NO){
@@ -82,19 +81,20 @@ public class CREATE     {
         try{
             File tablaCSV=new File(tablaPath);
             if(!tablaCSV.createNewFile()){
-                System.out.println("ERROR: TABLE NOT CREATED");
+                //System.out.println("ERROR: TABLE NOT CREATED");
             }
             FileWriter Writer=new FileWriter(tablaCSV);
 
             String[] Columna=columna.trim().split(",");
             for(int i=0;i<Columna.length;i++){
+                Columna[i]=Columna[i].trim();
                 String[] dato=Columna[i].trim().split(" ");
-                Writer.write(dato[1]+"\t");
+                Writer.write(dato[0]+"\t");
             }
             Writer.close();
 
         }catch(IOException e){
-            System.out.println("ERROR: TABLE NOT CREATED");
+            //System.out.println("ERROR: TABLE NOT CREATED");
         }
     }
 

@@ -16,6 +16,7 @@ public class App
     {
         boolean p=true;
         boolean m=true;
+        System.out.println("AL escribir las sentencias, escribala es una sola linea");
         CLAUSULAS clausula=new CLAUSULAS();
        do{
            BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
@@ -27,12 +28,15 @@ public class App
            }
            String[] en = entrada.split(" ");
 
-                if(p&&!en[0].equals("USE")){
-                    System.out.println("Inicialice la base de datos");
-                    p=false;
-                }else{
-                    clausula.clausula(entrada);
-                }
+           if(p&&!en[0].toUpperCase().equals("USE")){
+               System.out.println("Inicialice la base de datos");
+               p=false;
+           }else{
+               clausula.clausula(entrada);
+           }
+           if(en[0].toUpperCase().equals("USE")){
+               p=false;
+           }
 
        }while(m);
 
