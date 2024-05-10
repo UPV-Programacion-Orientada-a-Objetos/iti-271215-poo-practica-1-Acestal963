@@ -36,4 +36,17 @@ public class CREATETest extends TestCase {
         File to=new File("src/test/java/edu/upvictoria/fpoo/gg/mimi.csv");
         assertTrue(to.exists());
     }
+
+    public void testCrear_tabla2() {
+        CREATE C= new CREATE();
+        C.crear_tabla("NOMBRE VARCHAR(33) NOT NULL","mimi2","src/test/java/edu/upvictoria/fpoo/gg");
+        File to=new File("src/test/java/edu/upvictoria/fpoo/gg/mimi2.csv");
+        assertTrue(to.exists());
+    }
+    public void testCrear_estruc_tabla2() {
+        CREATE c=new CREATE();
+        c.crear_estruc_tabla("src/test/java/edu/upvictoria/fpoo/gg","juanito2","SEXO CHAR NOT NULL");
+        File ta=new File("src/test/java/edu/upvictoria/fpoo/gg/juanito.csv");
+        assertTrue(ta.exists());
+    }
 }
