@@ -30,7 +30,7 @@ public class INSERT {
                 writer.write(dat[i]+"\t");
             }
             writer.close();
-            System.out.println("INserccion correcta");
+            System.out.println("Inserccion correcta");
         }catch(IOException e){
             System.out.println("NO existe la tabla; "+tabla);
         }

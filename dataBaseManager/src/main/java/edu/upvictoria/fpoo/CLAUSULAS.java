@@ -108,20 +108,28 @@ public class CLAUSULAS {
     public void SELECT(String clausula){
         Pattern p2=Pattern.compile("SELECT \\* FROM (\\w+);");
         Matcher m2=p2.matcher(clausula);
+        SELECT select=new SELECT();
         if(m2.find()){
-            System.out.println(clausula);
+            System.out.println("NIONOE");
+            select.select(path$,m2.group(1));
         }
 
         Pattern p1=Pattern.compile("SELECT ([^*]+) FROM (\\w+);",Pattern.CASE_INSENSITIVE);
         Matcher m1=p1.matcher(clausula);
         if(m1.find()){
-            System.out.println(clausula);
+            System.out.println("NIONOE");
+            select.select(path$,m1.group(2),m1.group(1));
         }
 
-        Pattern p3=Pattern.compile("SELECT ([^*]+) FROM (\\w+) WHERE ([^()]);");
+        Pattern p3=Pattern.compile("SELECT ([^*]+) FROM (\\w+) WHERE (.+);");
         Matcher m3=p3.matcher(clausula);
         if(m3.find()){
-            System.out.println(clausula);
+            System.out.println("NIONOE");
+
+            //System.out.println(m3.group(3));
+            //select.select(path$,m3.group(2),m3.group(1),m3.group(3));
+            return;
         }
+
     }
 }
