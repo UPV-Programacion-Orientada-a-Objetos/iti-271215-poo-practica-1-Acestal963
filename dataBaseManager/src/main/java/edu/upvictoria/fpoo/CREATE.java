@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class CREATE     {
+public class CREATE{
 
     /**
      *
@@ -51,7 +51,6 @@ public class CREATE     {
         }catch(IOException e){
             //System.out.println("ERROR: TABLE NOT CREATED");
         }
-
         if(NO){
             crear_tabla(columnas,tabla,path);
         }
