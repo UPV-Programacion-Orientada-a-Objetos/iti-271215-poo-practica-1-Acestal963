@@ -28,9 +28,14 @@ public class SELECT {
     }
 
     public void select(String path, String tabla, String columna, String condicion){
-        String[] col_condicional=condicion.split("=");
-        System.out.println(col_condicional[1]+col_condicional[2]);
         String pppth=path+"/"+tabla+".csv";
+        System.out.println(condicion);
+        if(condicion.toUpperCase().contains("AND")){
+            String[] condiciones=condicion.trim().split("AND");
+            System.out.println(condiciones[0]+" "+condiciones[1]);
+        }else if(condicion.toUpperCase().contains("OR")){
+
+        }
     }
 
     public void select(String path, String tabla){
