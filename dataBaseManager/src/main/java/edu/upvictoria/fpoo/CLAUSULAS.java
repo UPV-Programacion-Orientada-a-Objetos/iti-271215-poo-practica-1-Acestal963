@@ -22,7 +22,7 @@ public class CLAUSULAS {
            }else if(sentencia[0].toUpperCase().toUpperCase().equals("CREATE")){
                CREATE(clausula);
                return true;
-           }else if(sentencia[0].toUpperCase().equals("DROP")) {
+           }else if(sentencia[0].toUpperCase().equals("DROP")&&sentencia[1].toUpperCase().equals("TABLE")) {
                DROP_TABLE(clausula);
            }else if(sentencia[0].toUpperCase().equals("INSERT")){
                INSERT_INTO(clausula);
@@ -53,7 +53,8 @@ public class CLAUSULAS {
      * @param path
      */
     public void SHOW_TABLES(String path){
-        System.out.println("Mostrar tablas de la base de datos de: "+path$);
+        SHOW_TABLES mostrar=new SHOW_TABLES();
+        mostrar.SHOW(path$);
     }
 
     /**
@@ -80,8 +81,9 @@ public class CLAUSULAS {
     public void DROP_TABLE(String clausula){
         Pattern p=Pattern.compile("DROP TABLE (\\w+);");
         Matcher m=p.matcher(clausula);
+        DROP_TABLE drop=new DROP_TABLE();
         if(m.find()){
-            System.out.println("Tabla a eliminar: "+m.group(1));
+          drop.drop(path$,m.group(1));
         }
     }
 
@@ -110,24 +112,19 @@ public class CLAUSULAS {
         Matcher m2=p2.matcher(clausula);
         SELECT select=new SELECT();
         if(m2.find()){
-            System.out.println("NIONOE");
             select.select(path$,m2.group(1));
         }
 
         Pattern p1=Pattern.compile("SELECT ([^*]+) FROM (\\w+);",Pattern.CASE_INSENSITIVE);
         Matcher m1=p1.matcher(clausula);
         if(m1.find()){
-            System.out.println("NIONOE");
             select.select(path$,m1.group(2),m1.group(1));
         }
 
         Pattern p3=Pattern.compile("SELECT ([^*]+) FROM (\\w+) WHERE (.+);");
         Matcher m3=p3.matcher(clausula);
         if(m3.find()){
-            System.out.println("NIONOE");
-
-            //System.out.println(m3.group(3));
-            //select.select(path$,m3.group(2),m3.group(1),m3.group(3));
+            select.select(path$,m3.group(2),m3.group(1),m3.group(3));
             return;
         }
 

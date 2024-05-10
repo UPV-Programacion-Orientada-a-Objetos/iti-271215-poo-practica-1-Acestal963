@@ -30,6 +30,7 @@ public class SELECT {
     public void select(String path, String tabla, String columna, String condicion){
         String[] col_condicional=condicion.split("=");
         System.out.println(col_condicional[1]+col_condicional[2]);
+        String pppth=path+"/"+tabla+".csv";
     }
 
     public void select(String path, String tabla){
