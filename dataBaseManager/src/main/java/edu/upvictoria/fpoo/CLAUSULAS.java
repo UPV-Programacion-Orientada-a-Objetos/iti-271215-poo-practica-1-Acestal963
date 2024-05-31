@@ -128,7 +128,6 @@ public class CLAUSULAS {
         Matcher m3=p3.matcher(clausula);
         if(m3.find()){
             select.select(path$,m3.group(2),m3.group(1),m3.group(3));
-            //select.select(path$,m3.group(2),m3.group(1),m3.group(3));
             t=true;
         }
         if(!t){

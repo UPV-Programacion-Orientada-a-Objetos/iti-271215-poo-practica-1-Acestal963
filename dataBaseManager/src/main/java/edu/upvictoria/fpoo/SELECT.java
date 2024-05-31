@@ -60,7 +60,7 @@ public class SELECT {
         }
     }
 
-    public void select(String path, String tabla, String columna, String condicion){
+    /*public void select(String path, String tabla, String columna, String condicion){
         String pppth=path+"/"+tabla+".csv";
         String[] condiciones=null;
         String operador_LO;//para un solo caso de operadores logicos
@@ -97,19 +97,14 @@ public class SELECT {
 
     public void WHERE(String path, String tabla, String columnas,String valores, String operadores_Comparacion){
         String patht=path+"/"+tabla+".csv";
-        try{
-            BufferedReader br=new BufferReader(new InputSt)
-        }catch(IOException e){
 
-        }
     }
 
     public void WHERE(String path, String tabla, String[] columnas,String[] valores, String[] operadores_Comparacion,String [] operadores_logicos){
 
+    }*/
+    public void select (String path, String tabla,String columna, String condicion){
+
     }
-
-
-
-
 
 }

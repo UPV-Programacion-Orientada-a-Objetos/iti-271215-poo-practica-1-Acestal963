@@ -22,4 +22,16 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.2.0</version>
+            <configuration>
+              <mainClass>com.example.Main</mainClass>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
 </project>
