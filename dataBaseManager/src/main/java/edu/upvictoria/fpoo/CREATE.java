@@ -20,32 +20,37 @@ public class CREATE{
 
     public void crear_estruc_tabla(String path,String tabla,String columnas){
        boolean NO=true;
-        path=path+"/";
+        if(!path.endsWith("/")){
+            path=path+"/";
+        }
         String tablas=path+tabla+"_estruc.csv";
         String [] columna_individual=columnas.trim().split(",");
 
+
         try{
             File archiv=new File(tablas);
+            System.out.println(archiv.getAbsolutePath());
             if(archiv.createNewFile()){
                 System.out.println("TABLE CREATED");
             }else{
                 System.out.println("OBJECT ALREADY EXIST");
             }
 
-            FileWriter writer=new FileWriter(archiv);
-            writer.write(tabla);
-            writer.write("\n");
-            for(int i=0;i<columna_individual.length;i++){
-                columna_individual[i]=columna_individual[i].trim();
-                String[] datos=columna_individual[i].trim().split(" ");
-                if(validar_tipo_de_datos(datos[1].trim())){
-                    writer.write(datos[0]+"\t"+datos[2]+" "+datos[3]+"\t"+datos[1].trim());
-                }else{
-                    System.out.println("Tipo de dato no admitido");
-                    NO=false;
-                    return;
+          FileWriter writer =new FileWriter(archiv);
+            writer.write(tabla + "\n");
+            for(String col: columna_individual){
+                col = col.trim();
+                System.out.println(col);
+                String[] datos = col.split("\\s+");
+
+                if (datos.length >= 2 && validar_tipo_de_datos(datos[1].trim())) {
+                    System.out.println(datos[1].trim());
+                    writer.write(datos[0] + "\t");
+                } else {
+                    System.out.println("Tipo de dato no admitido o insuficientes datos");
+                    NO = false;
+                    break;
                 }
-                writer.write("\n");
             }
             writer.close();
         }catch(IOException e){
@@ -57,7 +62,7 @@ public class CREATE{
     }
 
     public boolean validar_tipo_de_datos(String dato){
-        Pattern p= Pattern.compile("VARCHAR\\((\\d+)\\)");
+        Pattern p= Pattern.compile("VARCHAR\\s*\\(\\d+\\)");
         Matcher m=p.matcher(dato);
         if(m.find()){
             return true;
@@ -65,7 +70,7 @@ public class CREATE{
         if(dato.equals("INT")){
             return true;
         }
-        if(dato.equals("NUMERIC")){
+        if(dato.equals("NUMERIC") || dato.equals("NUMBER")){
             return true;
         }
         if(dato.equals("CHAR")){
@@ -74,28 +79,31 @@ public class CREATE{
         return false;
     }
 
-    public void crear_tabla(String columna,String table,String path){
-        path=path+"/";
-        String tablaPath=path+"/"+table+".csv";
-        try{
-            File tablaCSV=new File(tablaPath);
-            if(!tablaCSV.createNewFile()){
-                //System.out.println("ERROR: TABLE NOT CREATED");
+    public void crear_tabla(String columnas, String table, String path) {
+        path = path.endsWith("/") ? path : path + "/";
+        String tablaPath = path + table + ".csv";
+        try {
+            File tablaCSV = new File(tablaPath);
+            if (tablaCSV.createNewFile()) {
+                System.out.println("Table file created");
+            } else {
+                System.out.println("Table file already exists");
             }
-            FileWriter Writer=new FileWriter(tablaCSV);
 
-            String[] Columna=columna.trim().split(",");
-            for(int i=0;i<Columna.length;i++){
-                Columna[i]=Columna[i].trim();
-                String[] dato=Columna[i].trim().split(" ");
-                Writer.write(dato[0]+"\t");
+            try (FileWriter writer = new FileWriter(tablaCSV)) {
+                String[] columna_individual = columnas.trim().split(",");
+                for (int i = 0; i < columna_individual.length; i++) {
+                    String[] dato = columna_individual[i].trim().split("\\s+");
+                    writer.write(dato[0]);
+                    if (i < columna_individual.length - 1) {
+                        writer.write("\t");
+                    }
+                }
+                writer.write("\n");
             }
-            Writer.close();
-
-        }catch(IOException e){
-            //System.out.println("ERROR: TABLE NOT CREATED");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
-
 
 }

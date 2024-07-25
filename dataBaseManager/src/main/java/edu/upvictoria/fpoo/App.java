@@ -1,12 +1,11 @@
 package edu.upvictoria.fpoo;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
+/**U
  * Hello world!
  *
  */
@@ -32,6 +31,7 @@ public class App
                System.out.println("Inicialice la base de datos");
                p=false;
            }else{
+
                clausula.clausula(entrada);
            }
            if(en[0].toUpperCase().equals("USE")){

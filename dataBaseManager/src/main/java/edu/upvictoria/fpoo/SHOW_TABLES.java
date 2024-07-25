@@ -5,10 +5,14 @@ public class SHOW_TABLES {
     public void SHOW(String path){
         File base_Datos=new File(path);
         File[] tablas=base_Datos.listFiles();
-        for(File tabla: tablas){
-            if(!tabla.getName().contains("_")){
-                System.out.println(tabla.getName());
+        if(tablas!=null){
+            for(File tabla: tablas){
+                if(!tabla.getName().contains("_")&&tabla.getName()!=null){
+                    System.out.println(tabla.getName());
+                }
             }
+        }else{
+            System.out.println("No carnal, esta vacio\n");
         }
     }
 }

@@ -1,4 +1,5 @@
 package edu.upvictoria.fpoo;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,10 +14,10 @@ public class CLAUSULAS {
     public Boolean clausula(String clausula){
        String [] sentencia=clausula.split(" ");
        try{
-           if(sentencia[0].toUpperCase().equals("USE")){
+           if(sentencia[0].toUpperCase().equals("USE")&& sentencia[1].endsWith(";")){
                USE(sentencia[1]);
                return true;
-           }else if(sentencia[0].toUpperCase().equals("SHOW")&&sentencia[1].toUpperCase().equals("TABLES")){
+           }else if(sentencia[0].toUpperCase().equals("SHOW")&&sentencia[1].toUpperCase().equals("TABLES;")){
                SHOW_TABLES(path$);
                return true;
            }else if(sentencia[0].toUpperCase().toUpperCase().equals("CREATE")){
@@ -65,11 +66,10 @@ public class CLAUSULAS {
         Pattern p=Pattern.compile("CREATE TABLE (\\w+) \\(((?:[^()]+|\\((?:[^()]+|\\([^()]*\\))*\\))+)\\);");
         Matcher m=p.matcher(clausula);
         if(m.find()){
-            //7System.out.println("Nombre de la tabla: "+m.group(1)+"\nColumnas:\n");
-            String[] col=m.group(2).trim().split(",");
+
             CREATE crear=new CREATE();
             crear.crear_estruc_tabla(path$,m.group(1),m.group(2).trim());
-        }else if(!m.find()){
+        }else{
             System.out.println("Sintaxis Incorrecta");
         }
     }
@@ -109,7 +109,7 @@ public class CLAUSULAS {
 
     public void SELECT(String clausula){
         boolean t=false;
-        Pattern p2=Pattern.compile("SELECT \\* FROM (\\w+);");
+        Pattern p2=Pattern.compile("SELECT \\* FROM (\\w+);", Pattern.CASE_INSENSITIVE);
         Matcher m2=p2.matcher(clausula);
         SELECT select=new SELECT();
         if(m2.find()){
@@ -119,6 +119,7 @@ public class CLAUSULAS {
 
         Pattern p1=Pattern.compile("SELECT ([^*]+) FROM (\\w+);",Pattern.CASE_INSENSITIVE);
         Matcher m1=p1.matcher(clausula);
+
         if(m1.find()){
             select.select(path$,m1.group(2),m1.group(1));
             t=true;
@@ -127,12 +128,12 @@ public class CLAUSULAS {
         Pattern p3=Pattern.compile("SELECT ([^*]+) FROM (\\w+) WHERE (.+);");
         Matcher m3=p3.matcher(clausula);
         if(m3.find()){
-            select.select(path$,m3.group(2),m3.group(1),m3.group(3));
-            t=true;
+            System.out.println(m3.group(3));
+          select.SELECT(path$,m3.group(2),m3.group(1),m3.group(3));
+          t=true;
         }
         if(!t){
             System.out.println("Sintaxis Incorrecta");
-            return;
         }
 
     }
