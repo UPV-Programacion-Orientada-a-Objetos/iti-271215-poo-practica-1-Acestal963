@@ -12,11 +12,12 @@ public class SELECT {
         List<String[]> data = new ArrayList<>();
         String pathtabla=path+"/"+tableName+".csv";
        if(hasTableData(path, tableName)){
-           System.out.println(true);
+
             try (BufferedReader br = new BufferedReader(new FileReader(pathtabla))) {
                 String line;
                 while ((line = br.readLine()) != null) {
                     data.add(line.split("\t"));
+
                 }
             } catch (FileNotFoundException e) {
                 System.out.println("File not found: " + pathtabla);
@@ -104,44 +105,73 @@ public class SELECT {
         }
     }
 
+    public void select(String path, String tableName, String columns, String condition) {
+        List<String[]> data = loadData(path, tableName);
+        if (data.isEmpty()) {
+            System.out.println("No data found for table: " + tableName);
+            return;
+        }
 
-    public void SELECT(String path, String tabla, String columns, String condition) {
-        String path_table = path.endsWith("/") ? path + tabla + ".csv" : path + "/" + tabla + ".csv";
+        String[] colum = columns.split(",");
+        int[] colIndices = new int[colum.length];
+        String[] header = data.get(0);
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(path_table))) {
-            String header = reader.readLine();
-            if (header == null) {
-                System.out.println("Tabla vacía o no existe");
+        Map<String, Integer> columnIndexMap = new HashMap<>();
+        for (int i = 0; i < header.length; i++) {
+            columnIndexMap.put(header[i].trim(), i);
+        }
+
+        for (int j = 0; j < colum.length; j++) {
+            colum[j] = colum[j].trim();
+            if (columnIndexMap.containsKey(colum[j])) {
+                colIndices[j] = columnIndexMap.get(colum[j]);
+            } else {
+                System.out.println("Column not found: " + colum[j]);
                 return;
             }
-            String[] columnNames = header.split("\t");
-            Set<String> selectedColumns = new HashSet<>(Arrays.asList(columns.split(",")));
-            Map<String, Integer> columnIndices = new HashMap<>();
-            for (int i = 0; i < columnNames.length; i++) {
-                columnIndices.put(columnNames[i].trim(), i);
-            }
-            WHERE where = new WHERE(columnIndices);
-            System.out.println("Resultados de la consulta:");
-            for (String column : columnNames) {
-                if (selectedColumns.contains(column.trim())) {
-                    System.out.print(column.trim() + "\t");
-                }
-            }
-            System.out.println();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (where.evaluateCondition(line, condition)) {
-                    String[] fields = line.split("\t");
-                    for (int i = 0; i < columnNames.length; i++) {
-                        if (selectedColumns.contains(columnNames[i].trim())) {
-                            System.out.print(fields[i] + "\t");
-                        }
+        }
+
+        System.out.println("Resultados de la búsqueda:");
+        for (int colIndex : colIndices) {
+            System.out.print(header[colIndex] + "\t");
+        }
+        System.out.println();
+
+        WHERE where = new WHERE(columnIndexMap);
+        for (String[] row : data.subList(1, data.size())) {
+            if (where.evaluateCondition(row, condition)) {
+                for (int colIndex : colIndices) {
+                    if (colIndex < row.length) {
+                        System.out.print(row[colIndex] + "\t");
                     }
-                    System.out.println();
                 }
+                System.out.println();
             }
-        } catch (IOException e) {
-            System.out.println("Error al leer el archivo: " + e.getMessage());
+        }
+    }
+
+
+    public void selectAll(String path, String tableName, String condition) {
+        List<String[]> data = loadData(path, tableName);
+        if (data.isEmpty()) {
+            System.out.println("No data found for table: " + tableName);
+            return;
+        }
+
+        String[] header = data.get(0);
+        Map<String, Integer> columnIndexMap = new HashMap<>();
+        for (int i = 0; i < header.length; i++) {
+            columnIndexMap.put(header[i].trim(), i);
+        }
+
+        WHERE where = new WHERE(columnIndexMap);
+        System.out.println("Resultados de la búsqueda:");
+        System.out.println(String.join("\t", header));
+
+        for (String[] row : data.subList(1, data.size())) {
+            if (where.evaluateCondition(row, condition)) {
+                System.out.println(String.join("\t", row));
+            }
         }
     }
 

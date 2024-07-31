@@ -1,5 +1,6 @@
 package edu.upvictoria.fpoo;
 
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,9 +14,11 @@ public class CLAUSULAS {
      */
     public Boolean clausula(String clausula){
        String [] sentencia=clausula.split(" ");
+       int tam=sentencia.length;
        try{
-           if(sentencia[0].toUpperCase().equals("USE")&& sentencia[1].endsWith(";")){
-               USE(sentencia[1]);
+           if(sentencia[0].toUpperCase().equals("USE")){
+               String [] path=sentencia[1].split(";");
+               USE(path[0]);
                return true;
            }else if(sentencia[0].toUpperCase().equals("SHOW")&&sentencia[1].toUpperCase().equals("TABLES;")){
                SHOW_TABLES(path$);
@@ -31,6 +34,12 @@ public class CLAUSULAS {
            }else if(sentencia[0].toUpperCase().equals("SELECT")){
                SELECT(clausula);
                return true;
+           }else if(sentencia[0].toUpperCase().equals("UPDATE")) {
+               UPDATE(clausula);
+               return true;
+           }else if(sentencia[0].toUpperCase().equals("DELETE")&&sentencia[1].toUpperCase().equals("FROM")){
+                DELETE(clausula);
+                return true;
            }else{
                System.out.println("Comando desconocido");
            }
@@ -63,7 +72,7 @@ public class CLAUSULAS {
      * @param clausula
      */
     public void CREATE(String clausula){
-        Pattern p=Pattern.compile("CREATE TABLE (\\w+) \\(((?:[^()]+|\\((?:[^()]+|\\([^()]*\\))*\\))+)\\);");
+        Pattern p=Pattern.compile("CREATE TABLE (\\w+) \\(((?:[^()]+|\\((?:[^()]+|\\([^()]*\\))*\\))+)\\)");
         Matcher m=p.matcher(clausula);
         if(m.find()){
 
@@ -79,7 +88,7 @@ public class CLAUSULAS {
      * @param clausula
      */
     public void DROP_TABLE(String clausula){
-        Pattern p=Pattern.compile("DROP TABLE (\\w+);");
+        Pattern p=Pattern.compile("DROP TABLE (\\w+)");
         Matcher m=p.matcher(clausula);
         DROP_TABLE drop=new DROP_TABLE();
         if(m.find()){
@@ -92,10 +101,10 @@ public class CLAUSULAS {
      * @param clausula
      */
     public void INSERT_INTO(String clausula){
-        Pattern p=Pattern.compile("INSERT INTO (\\w+) VALUES \\(([^)]+)\\);");
+        Pattern p=Pattern.compile("INSERT INTO (\\w+) VALUES \\(([^)]+)\\)");
         Matcher m=p.matcher(clausula);
 
-        Pattern p2=Pattern.compile("INSERT INTO (\\w+) \\(([^)]+)\\) VALUES \\(([^)]+)\\);");
+        Pattern p2=Pattern.compile("INSERT INTO (\\w+) \\(([^)]+)\\) VALUES \\(([^)]+)\\)");
         Matcher m2=p2.matcher(clausula);
 
         INSERT insert=new INSERT();
@@ -108,33 +117,69 @@ public class CLAUSULAS {
     }
 
     public void SELECT(String clausula){
-        boolean t=false;
-        Pattern p2=Pattern.compile("SELECT \\* FROM (\\w+);", Pattern.CASE_INSENSITIVE);
-        Matcher m2=p2.matcher(clausula);
-        SELECT select=new SELECT();
-        if(m2.find()){
-            select.select(path$,m2.group(1));
-            t=true;
+        boolean t = false;
+        SELECT select = new SELECT();
+
+        Pattern p0 = Pattern.compile("SELECT \\* FROM (\\w+) WHERE (.+)", Pattern.CASE_INSENSITIVE);
+        Matcher m0 = p0.matcher(clausula);
+        if (m0.find() && !t) {
+            //System.out.println(m0.group(2));
+            select.selectAll(path$, m0.group(1), m0.group(2));
+            t = true;
         }
 
-        Pattern p1=Pattern.compile("SELECT ([^*]+) FROM (\\w+);",Pattern.CASE_INSENSITIVE);
-        Matcher m1=p1.matcher(clausula);
-
-        if(m1.find()){
-            select.select(path$,m1.group(2),m1.group(1));
-            t=true;
+        Pattern p3 = Pattern.compile("SELECT ([^*]+) FROM (\\w+) WHERE (.+)", Pattern.CASE_INSENSITIVE);
+        Matcher m3 = p3.matcher(clausula);
+        if (m3.find()) {
+            select.select(path$, m3.group(2), m3.group(1), m3.group(3));
+            t = true;
         }
 
-        Pattern p3=Pattern.compile("SELECT ([^*]+) FROM (\\w+) WHERE (.+);");
-        Matcher m3=p3.matcher(clausula);
-        if(m3.find()){
-            System.out.println(m3.group(3));
-          select.SELECT(path$,m3.group(2),m3.group(1),m3.group(3));
-          t=true;
+        Pattern p1 = Pattern.compile("SELECT ([^*]+) FROM (\\w+)", Pattern.CASE_INSENSITIVE);
+        Matcher m1 = p1.matcher(clausula);
+        if (m1.find() && !t) {
+            select.select(path$, m1.group(2), m1.group(1));
+            t = true;
         }
-        if(!t){
+
+        Pattern p2 = Pattern.compile("SELECT \\* FROM (\\w+)", Pattern.CASE_INSENSITIVE);
+        Matcher m2 = p2.matcher(clausula);
+        if (m2.find() && !t) {
+            select.select(path$, m2.group(1));
+            t = true;
+        }
+
+
+        if (!t) {
             System.out.println("Sintaxis Incorrecta");
         }
+    }
+    public void UPDATE(String clausula) {
+        Pattern p = Pattern.compile("UPDATE (\\w+) SET ([^;]+) WHERE (.+)");
+        Matcher m = p.matcher(clausula);
+        if (m.find()) {
+            String tableName = m.group(1);
+            String setClause = m.group(2);
+            String condition = m.group(3);
 
+            UPDATE update = new UPDATE();
+            update.update(path$, tableName, setClause, condition);
+        } else {
+            System.out.println("Sintaxis Incorrecta");
+        }
+    }
+    public void DELETE(String clausula) {
+        Pattern p = Pattern.compile("DELETE FROM (\\w+) WHERE (.+)");
+        Matcher m = p.matcher(clausula);
+        if (m.find()) {
+            String tableName = m.group(1);
+            String condition = m.group(2);
+
+            DELETE delete = new DELETE();
+            delete.delete(path$, tableName, condition);
+        } else {
+            System.out.println("Sintaxis Incorrecta");
+        }
     }
 }
+

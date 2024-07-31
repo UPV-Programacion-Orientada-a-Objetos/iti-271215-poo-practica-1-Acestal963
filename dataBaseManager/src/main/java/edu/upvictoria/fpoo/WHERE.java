@@ -1,174 +1,110 @@
 package edu.upvictoria.fpoo;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class WHERE {
-    private Map<String, Integer> columnIndices;
+    private Map<String, Integer> columnIndexMap;
 
-    public WHERE(Map<String, Integer> columnIndices) {
-        this.columnIndices = columnIndices;
+    public WHERE(Map<String, Integer> columnIndexMap) {
+        this.columnIndexMap = columnIndexMap;
     }
 
-    public String extractCondition(String sql) {
-        int whereIndex = sql.indexOf("WHERE");
-        if (whereIndex == -1) {
-            return "";
+    public boolean evaluateCondition(String[] row, String condition) {
+        Deque<Boolean> values = new ArrayDeque<>();
+        Deque<String> operators = new ArrayDeque<>();
+
+        String[] tokens = condition.split("(?i)\\s+(AND|OR)\\s+");
+        Matcher matcher = Pattern.compile("(?i)\\b(AND|OR)\\b").matcher(condition);
+        List<String> ops = new ArrayList<>();
+        while (matcher.find()) {
+            ops.add(matcher.group(1).toUpperCase());
         }
-        return sql.substring(whereIndex + 5).trim();
-    }
 
-    public String extractUpdateData(String sql) {
-        int setIndex = sql.indexOf("SET");
-        int whereIndex = sql.indexOf("WHERE");
-        if (setIndex == -1 || whereIndex == -1) {
-            return "";
-        }
-        return sql.substring(setIndex + 3, whereIndex).trim();
-    }
+        for (int i = 0; i < tokens.length; i++) {
+            boolean currentValue = evaluateSimpleCondition(row, tokens[i].trim());
+            values.push(currentValue);
 
-    public boolean evaluateCondition(String line, String condition) {
-        condition = condition.replaceAll("\\s+", " ").trim();
-        return evaluateLogicalCondition(line, condition);
-    }
-
-    private boolean evaluateLogicalCondition(String line, String condition) {
-        Stack<Boolean> results = new Stack<>();
-        Stack<String> operators = new Stack<>();
-        int index = 0;
-
-        while (index < condition.length()) {
-            if (condition.charAt(index) == '(') {
-                int end = findClosingParenthesis(condition, index);
-                boolean subResult = evaluateLogicalCondition(line, condition.substring(index + 1, end));
-                results.push(subResult);
-                index = end + 1;
-            } else {
-                int nextOpIndex = findNextOperatorIndex(condition, index);
-                String expr = condition.substring(index, nextOpIndex).trim();
-                boolean currentResult = evaluateExpression(line, expr);
-                results.push(currentResult);
-                if (nextOpIndex < condition.length()) {
-                    String operator = condition.substring(nextOpIndex, nextOpIndex + 3).trim();
-                    operators.push(operator);
-                    index = nextOpIndex + 3;
-                } else {
-                    break;
+            if (i < ops.size()) {
+                String currentOperator = ops.get(i);
+                while (!operators.isEmpty() && precedence(currentOperator) <= precedence(operators.peek())) {
+                    applyOperator(values, operators.pop());
                 }
+                operators.push(currentOperator);
             }
         }
 
-        return evaluateResults(results, operators);
-    }
-
-    private int findClosingParenthesis(String condition, int openIndex) {
-        int closeIndex = openIndex;
-        int counter = 1;
-        while (counter > 0) {
-            closeIndex++;
-            if (condition.charAt(closeIndex) == '(') {
-                counter++;
-            } else if (condition.charAt(closeIndex) == ')') {
-                counter--;
-            }
-        }
-        return closeIndex;
-    }
-
-    private int findNextOperatorIndex(String condition, int startIndex) {
-        int andIndex = condition.indexOf("AND", startIndex);
-        int orIndex = condition.indexOf("OR", startIndex);
-        if (andIndex == -1 && orIndex == -1) {
-            return condition.length();
-        } else if (andIndex == -1) {
-            return orIndex;
-        } else if (orIndex == -1) {
-            return andIndex;
-        } else {
-            return Math.min(andIndex, orIndex);
-        }
-    }
-
-    private boolean evaluateResults(Stack<Boolean> results, Stack<String> operators) {
         while (!operators.isEmpty()) {
-            boolean b1 = results.pop();
-            boolean b2 = results.pop();
-            String op = operators.pop();
-            if (op.equals("AND")) {
-                results.push(b1 && b2);
-            } else if (op.equals("OR")) {
-                results.push(b1 || b2);
-            }
+            applyOperator(values, operators.pop());
         }
-        return results.isEmpty() ? false : results.pop();
+
+        return values.pop();
     }
 
-    private boolean evaluateExpression(String line, String expression) {
-
-        String regex = "(=|!=|>=|<=|>|<)";
-        String[] parts = expression.split(regex);
-
-        if (parts.length != 2) {
-            throw new IllegalArgumentException("Expresión inválida: " + expression);
+    private boolean evaluateSimpleCondition(String[] row, String condition) {
+        String[] parts = condition.split("(?<=[=<>!])|(?=[=<>!])");
+        if (parts.length != 3) {
+            throw new IllegalArgumentException("Invalid condition: " + condition);
         }
 
-        String columnName = parts[0].trim();
-        String value = parts[1].trim().replaceAll("^'|'$", "");
+        String column = parts[0].trim();
+        String operator = parts[1].trim();
+        String value = parts[2].trim();
 
-
-        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(regex).matcher(expression);
-        String operator = "";
-        if (matcher.find()) {
-            operator = matcher.group().trim();
+        int colIndex = columnIndexMap.getOrDefault(column, -1);
+        if (colIndex == -1) {
+            throw new IllegalArgumentException("Column not found: " + column);
         }
 
-        if (operator.isEmpty()) {
-            throw new IllegalArgumentException("Operador no soportado: '" + operator + "'");
-        }
+        String cellValue = row[colIndex];
+        return compare(cellValue, operator, value);
+    }
 
-
-        Integer fieldIndex = columnIndices.get(columnName);
-        if (fieldIndex == null) {
-            throw new IllegalArgumentException("Columna no encontrada: " + columnName);
-        }
-
-
-        if (line == null || line.trim().isEmpty()) {
-            throw new IllegalArgumentException("Línea de datos vacía.");
-        }
-
-        String[] fields = line.split("\t");
-
-        if (fieldIndex < 0 || fieldIndex >= fields.length) {
-            throw new IllegalArgumentException("Índice de campo fuera de rango: " + fieldIndex + ". Línea de datos: " + line);
-        }
-        String fieldValue = fields[fieldIndex].trim();
-
+    private boolean compare(String cellValue, String operator, String value) {
         switch (operator) {
             case "=":
-                return fieldValue.equals(value);
+                return cellValue.equals(value);
             case "!=":
-                return !fieldValue.equals(value);
-            case ">":
-                return compare(fieldValue, value) > 0;
+                return !cellValue.equals(value);
             case "<":
-                return compare(fieldValue, value) < 0;
-            case ">=":
-                return compare(fieldValue, value) >= 0;
+                return Double.parseDouble(cellValue) < Double.parseDouble(value);
+            case ">":
+                return Double.parseDouble(cellValue) > Double.parseDouble(value);
             case "<=":
-                return compare(fieldValue, value) <= 0;
+                return Double.parseDouble(cellValue) <= Double.parseDouble(value);
+            case ">=":
+                return Double.parseDouble(cellValue) >= Double.parseDouble(value);
             default:
-                throw new IllegalArgumentException("Operador no soportado: " + operator);
+                throw new IllegalArgumentException("Unknown operator: " + operator);
         }
     }
 
+    private void applyOperator(Deque<Boolean> values, String operator) {
+        boolean right = values.pop();
+        boolean left = values.pop();
+        boolean result;
+        switch (operator) {
+            case "AND":
+                result = left && right;
+                break;
+            case "OR":
+                result = left || right;
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown operator: " + operator);
+        }
+        values.push(result);
+    }
 
-    private int compare(String a, String b) {
-        try {
-            return Integer.compare(Integer.parseInt(a), Integer.parseInt(b));
-        } catch (NumberFormatException e) {
-            return a.compareTo(b);
+    private int precedence(String operator) {
+        switch (operator) {
+            case "AND":
+                return 2;
+            case "OR":
+                return 1;
+            default:
+                return 0;
         }
     }
 }

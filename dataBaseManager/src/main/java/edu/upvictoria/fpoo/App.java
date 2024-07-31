@@ -17,28 +17,38 @@ public class App
         boolean m=true;
         System.out.println("AL escribir las sentencias, escribala es una sola linea");
         CLAUSULAS clausula=new CLAUSULAS();
-       do{
-           BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
-           String entrada=null;
-           try{
-               entrada=br.readLine();
-           }catch(IOException e){
-               System.out.println("Error al leer la entrada");
-           }
-           String[] en = entrada.split(" ");
 
-           if(p&&!en[0].toUpperCase().equals("USE")){
-               System.out.println("Inicialice la base de datos");
-               p=false;
-           }else{
+        do {
+            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+            String entrada = null;
+            try {
+                entrada = br.readLine();
+            } catch (IOException e) {
+                System.out.println("Error al leer la entrada");
+            }
 
-               clausula.clausula(entrada);
-           }
-           if(en[0].toUpperCase().equals("USE")){
-               p=false;
-           }
+            if (entrada != null) {
+                String[] sentencias = entrada.split(";");
 
-       }while(m);
+                for (String sentencia : sentencias) {
+                    sentencia = sentencia.trim();
+                    if (sentencia.isEmpty()) continue;
+
+                    String[] en = sentencia.split(" ");
+
+                    if (p && !en[0].toUpperCase().equals("USE")) {
+                        System.out.println("Inicialice la base de datos");
+                        p = false;
+                    } else {
+                        clausula.clausula(sentencia);
+                    }
+
+                    if (en[0].toUpperCase().equals("USE")) {
+                        p = false;
+                    }
+                }
+            }
+        } while (m);
 
     }
 }
