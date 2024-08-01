@@ -7,44 +7,39 @@ import java.io.IOException;
 import java.util.*;
 
 public class SELECT {
-
     private List<String[]> loadData(String path, String tableName) {
         List<String[]> data = new ArrayList<>();
-        String pathtabla=path+"/"+tableName+".csv";
-       if(hasTableData(path, tableName)){
-
+        String pathtabla = path + "/" + tableName + ".csv";
+        if (hasTableData(path, tableName)) {
             try (BufferedReader br = new BufferedReader(new FileReader(pathtabla))) {
                 String line;
                 while ((line = br.readLine()) != null) {
                     data.add(line.split("\t"));
-
                 }
             } catch (FileNotFoundException e) {
-                System.out.println("File not found: " + pathtabla);
+                System.out.println("Tabla no encontrada: " + pathtabla);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-       }else{
-           System.out.println("La tabla "+tableName+" no contiene datos");
-       }
+        } else {
+            System.out.println("La tabla " + tableName + " no contiene datos");
+        }
         return data;
     }
 
     public static List<String[]> readTableData(String path, String tableName) {
         List<String[]> data = new ArrayList<>();
         String pathtabla = path + "/" + tableName + ".csv";
-
         try (BufferedReader br = new BufferedReader(new FileReader(pathtabla))) {
             String line;
             while ((line = br.readLine()) != null) {
                 data.add(line.split("\t"));
             }
         } catch (FileNotFoundException e) {
-           // System.out.println("File not found: " + pathtabla);
+            // System.out.println("File not found: " + pathtabla);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         return data;
     }
 
@@ -53,67 +48,16 @@ public class SELECT {
         return data.size() > 1;
     }
 
-
-    public void select(String path, String tabla, String columna){
-        String ppath=path+"/"+tabla+".csv";
-        String[]colum=columna.split(",");
-        if(!hasTableData(path, tabla)){
-            System.out.println("La tabla "+tabla+" no contiene datos");
-            return;
-        }else {
-            try (BufferedReader br = new BufferedReader(new FileReader(ppath))) {
-                String linea;
-                boolean headerRead = false;
-                int[] col = new int[colum.length];
-
-
-                while ((linea = br.readLine()) != null) {
-                    String[] datos = linea.split("\t");
-
-                    if (!headerRead) {
-                        for (int i = 0; i < datos.length; i++) {
-                            for (int j = 0; j < colum.length; j++) {
-                                if (datos[i].equals(colum[j].trim())) {
-                                    col[j] = i;
-                                }
-                            }
-                        }
-
-                        headerRead = true;
-                        continue;
-                    }
-                    for (int i = 0; i < col.length; i++) {
-                        if (col[i] < datos.length) {
-                            System.out.print(datos[col[i]] + "\t");
-                        }
-                    }
-                    System.out.println();
-                }
-            } catch (IOException e) {
-                System.out.println("La tabla no existe");
-            }
-        }
-    }
-
-    public void select(String path, String tableName) {
-        List<String[]> data = loadData(path, tableName);
-        for (String[] row : data) {
-            for (String column : row) {
-                System.out.print(column + "\t");
-            }
-            System.out.println();
-        }
-    }
-
     public void select(String path, String tableName, String columns, String condition) {
         List<String[]> data = loadData(path, tableName);
         if (data.isEmpty()) {
-            System.out.println("No data found for table: " + tableName);
+            System.out.println("Tabla vacía: " + tableName);
             return;
         }
 
         String[] colum = columns.split(",");
         int[] colIndices = new int[colum.length];
+        Arrays.fill(colIndices, -1);
         String[] header = data.get(0);
 
         Map<String, Integer> columnIndexMap = new HashMap<>();
@@ -121,35 +65,57 @@ public class SELECT {
             columnIndexMap.put(header[i].trim(), i);
         }
 
+        boolean allColumnsFound = true;
+
         for (int j = 0; j < colum.length; j++) {
             colum[j] = colum[j].trim();
             if (columnIndexMap.containsKey(colum[j])) {
                 colIndices[j] = columnIndexMap.get(colum[j]);
             } else {
-                System.out.println("Column not found: " + colum[j]);
-                return;
+                System.out.println("Columna inexistente: " + colum[j]);
+                allColumnsFound = false;
             }
         }
 
-        System.out.println("Resultados de la búsqueda:");
-        for (int colIndex : colIndices) {
-            System.out.print(header[colIndex] + "\t");
+        if (!allColumnsFound) {
+            return;
         }
-        System.out.println();
 
         WHERE where = new WHERE(columnIndexMap);
+        boolean dataFound = false;
+
+        // Check if any row matches the condition
         for (String[] row : data.subList(1, data.size())) {
             if (where.evaluateCondition(row, condition)) {
-                for (int colIndex : colIndices) {
-                    if (colIndex < row.length) {
-                        System.out.print(row[colIndex] + "\t");
-                    }
-                }
-                System.out.println();
+                dataFound = true;
+                break;
             }
         }
-    }
 
+        if (dataFound) {
+            System.out.println("Resultados de la búsqueda:");
+            for (int colIndex : colIndices) {
+                if (colIndex != -1) {
+                    System.out.print(header[colIndex] + "\t");
+                }
+            }
+            System.out.println();
+
+            // Print matching rows
+            for (String[] row : data.subList(1, data.size())) {
+                if (where.evaluateCondition(row, condition)) {
+                    for (int colIndex : colIndices) {
+                        if (colIndex != -1 && colIndex < row.length) {
+                            System.out.print(row[colIndex] + "\t");
+                        }
+                    }
+                    System.out.println();
+                }
+            }
+        } else {
+            System.out.println("Datos no encontrados");
+        }
+    }
 
     public void selectAll(String path, String tableName, String condition) {
         List<String[]> data = loadData(path, tableName);
@@ -165,14 +131,99 @@ public class SELECT {
         }
 
         WHERE where = new WHERE(columnIndexMap);
-        System.out.println("Resultados de la búsqueda:");
-        System.out.println(String.join("\t", header));
+        boolean dataFound = false;
 
+        // Check if any row matches the condition
         for (String[] row : data.subList(1, data.size())) {
             if (where.evaluateCondition(row, condition)) {
-                System.out.println(String.join("\t", row));
+                dataFound = true;
+                break;
             }
+        }
+
+        if (dataFound) {
+            System.out.println("Resultados de la búsqueda:");
+            System.out.println(String.join("\t", header));
+
+            // Print matching rows
+            for (String[] row : data.subList(1, data.size())) {
+                if (where.evaluateCondition(row, condition)) {
+                    System.out.println(String.join("\t", row));
+                }
+            }
+        } else {
+            System.out.println("Datos no encontrados");
         }
     }
 
+    public void select(String path, String tableName) {
+        List<String[]> data = loadData(path, tableName);
+        if (data.isEmpty()) {
+            System.out.println("No data found for table: " + tableName);
+            return;
+        }
+
+        for (String[] row : data) {
+            for (String column : row) {
+                System.out.print(column + "\t");
+            }
+            System.out.println();
+        }
+    }
+
+    public void select(String path, String tableName, String columns) {
+        String[] colum = columns.split(",");
+        int[] colIndices = new int[colum.length];
+        Arrays.fill(colIndices, -1);
+
+        if (!hasTableData(path, tableName)) {
+            System.out.println("La tabla " + tableName + " no contiene datos");
+            return;
+        }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(path + "/" + tableName + ".csv"))) {
+            String line;
+            boolean headerRead = false;
+            String[] header = null;
+            Map<String, Integer> columnIndexMap = new HashMap<>();
+
+            while ((line = br.readLine()) != null) {
+                String[] datos = line.split("\t");
+
+                if (!headerRead) {
+                    header = datos;
+                    for (int i = 0; i < datos.length; i++) {
+                        columnIndexMap.put(datos[i].trim(), i);
+                    }
+
+                    for (int j = 0; j < colum.length; j++) {
+                        colum[j] = colum[j].trim();
+                        if (columnIndexMap.containsKey(colum[j])) {
+                            colIndices[j] = columnIndexMap.get(colum[j]);
+                        } else {
+                            System.out.println("Columna no encontrada: " + colum[j]);
+                        }
+                    }
+
+                    headerRead = true;
+                    continue;
+                }
+
+                boolean dataFound = false;
+                for (int colIndex : colIndices) {
+                    if (colIndex != -1 && colIndex < datos.length) {
+                        dataFound = true;
+                        System.out.print(datos[colIndex] + "\t");
+                    }
+                }
+                System.out.println();
+
+                if (!dataFound) {
+                    System.out.println("Datos no encontrados");
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("La tabla no existe");
+        }
+    }
 }

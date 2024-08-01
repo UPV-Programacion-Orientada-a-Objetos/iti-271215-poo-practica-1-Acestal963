@@ -12,26 +12,44 @@ public class WHERE {
     }
 
     public boolean evaluateCondition(String[] row, String condition) {
+        // Preprocesar la condición para manejar los paréntesis y operadores
+        String processedCondition = processCondition(condition);
+        return evaluateExpression(row, processedCondition);
+    }
+
+    private String processCondition(String condition) {
+        // Reemplazar los operadores lógicos con el formato necesario para el análisis
+        return condition.replaceAll("\\s+(AND|OR)\\s+", " $1 ")
+                .replaceAll("\\s*\\(\\s*", "(")
+                .replaceAll("\\s*\\)\\s*", ")");
+    }
+
+    private boolean evaluateExpression(String[] row, String condition) {
         Deque<Boolean> values = new ArrayDeque<>();
         Deque<String> operators = new ArrayDeque<>();
 
-        String[] tokens = condition.split("(?i)\\s+(AND|OR)\\s+");
-        Matcher matcher = Pattern.compile("(?i)\\b(AND|OR)\\b").matcher(condition);
-        List<String> ops = new ArrayList<>();
-        while (matcher.find()) {
-            ops.add(matcher.group(1).toUpperCase());
-        }
+        // Añadir un espacio antes de cada paréntesis para tokenización
+        String conditionWithSpaces = condition.replaceAll("([()])", " $1 ");
+        List<String> tokens = tokenize(conditionWithSpaces);
 
-        for (int i = 0; i < tokens.length; i++) {
-            boolean currentValue = evaluateSimpleCondition(row, tokens[i].trim());
-            values.push(currentValue);
+        for (String token : tokens) {
+            token = token.trim();
 
-            if (i < ops.size()) {
-                String currentOperator = ops.get(i);
-                while (!operators.isEmpty() && precedence(currentOperator) <= precedence(operators.peek())) {
+            if (token.equals("(")) {
+                operators.push(token);
+            } else if (token.equals(")")) {
+                while (!operators.peek().equals("(")) {
                     applyOperator(values, operators.pop());
                 }
-                operators.push(currentOperator);
+                operators.pop();  // Remove the '('
+            } else if (isOperator(token)) {
+                while (!operators.isEmpty() && precedence(token) <= precedence(operators.peek())) {
+                    applyOperator(values, operators.pop());
+                }
+                operators.push(token);
+            } else {
+                boolean currentValue = evaluateSimpleCondition(row, token);
+                values.push(currentValue);
             }
         }
 
@@ -42,7 +60,20 @@ public class WHERE {
         return values.pop();
     }
 
+    private List<String> tokenize(String condition) {
+        List<String> tokens = new ArrayList<>();
+        Matcher matcher = Pattern.compile("\\S+|[()\\s]+").matcher(condition);
+        while (matcher.find()) {
+            String token = matcher.group().trim();
+            if (!token.isEmpty()) {
+                tokens.add(token);
+            }
+        }
+        return tokens;
+    }
+
     private boolean evaluateSimpleCondition(String[] row, String condition) {
+        // Tokenizar la condición en base a operadores
         String[] parts = condition.split("(?<=[=<>!])|(?=[=<>!])");
         if (parts.length != 3) {
             throw new IllegalArgumentException("Invalid condition: " + condition);
@@ -50,33 +81,53 @@ public class WHERE {
 
         String column = parts[0].trim();
         String operator = parts[1].trim();
-        String value = parts[2].trim();
+        String value = parts[2].trim().replaceAll("^'|'$", ""); // Remove surrounding single quotes
+
+        // Limpiar comillas dobles
+        value = value.replaceAll("^\"|\"$", "").replaceAll("\"\"", "\"");
 
         int colIndex = columnIndexMap.getOrDefault(column, -1);
         if (colIndex == -1) {
-            throw new IllegalArgumentException("Column not found: " + column);
+            System.out.println("Error: Column not found: " + column);
+            return false;  // or throw an exception if preferred
         }
 
-        String cellValue = row[colIndex];
+        String cellValue = row[colIndex].trim();
         return compare(cellValue, operator, value);
     }
 
     private boolean compare(String cellValue, String operator, String value) {
-        switch (operator) {
-            case "=":
-                return cellValue.equals(value);
-            case "!=":
-                return !cellValue.equals(value);
-            case "<":
-                return Double.parseDouble(cellValue) < Double.parseDouble(value);
-            case ">":
-                return Double.parseDouble(cellValue) > Double.parseDouble(value);
-            case "<=":
-                return Double.parseDouble(cellValue) <= Double.parseDouble(value);
-            case ">=":
-                return Double.parseDouble(cellValue) >= Double.parseDouble(value);
-            default:
-                throw new IllegalArgumentException("Unknown operator: " + operator);
+        // Eliminar comillas simples y dobles
+        cellValue = cellValue.replaceAll("^'|'$", "").replaceAll("^\"|\"$", "").replaceAll("\"\"", "\"");
+        value = value.replaceAll("^'|'$", "").replaceAll("^\"|\"$", "").replaceAll("\"\"", "\"");
+
+        try {
+            switch (operator) {
+                case "=":
+                    return cellValue.equals(value);
+                case "!=":
+                    return !cellValue.equals(value);
+                case "<":
+                    return Double.parseDouble(cellValue) < Double.parseDouble(value);
+                case ">":
+                    return Double.parseDouble(cellValue) > Double.parseDouble(value);
+                case "<=":
+                    return Double.parseDouble(cellValue) <= Double.parseDouble(value);
+                case ">=":
+                    return Double.parseDouble(cellValue) >= Double.parseDouble(value);
+                default:
+                    throw new IllegalArgumentException("Unknown operator: " + operator);
+            }
+        } catch (NumberFormatException e) {
+            // Si ocurre una excepción de formato numérico, asumimos que estamos comparando cadenas
+            switch (operator) {
+                case "=":
+                    return cellValue.equals(value);
+                case "!=":
+                    return !cellValue.equals(value);
+                default:
+                    throw new IllegalArgumentException("Cannot compare non-numeric values with operator: " + operator);
+            }
         }
     }
 
@@ -107,4 +158,9 @@ public class WHERE {
                 return 0;
         }
     }
+
+    private boolean isOperator(String token) {
+        return token.equals("AND") || token.equals("OR");
+    }
 }
+

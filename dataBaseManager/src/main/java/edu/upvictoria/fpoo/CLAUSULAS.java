@@ -1,6 +1,7 @@
 package edu.upvictoria.fpoo;
 
 
+import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,8 +55,15 @@ public class CLAUSULAS {
      * @param path
      */
     public void USE(String path){
-        System.out.println("Path de la base de datos: "+path);
-        path$=path;
+
+        File dbPath = new File(path);
+
+        if (dbPath.exists()) {
+            System.out.println("Path de la base de datos: " + path);
+            path$ = path;
+        } else {
+            System.out.println("Error: El path especificado no existe.");
+        }
     }
 
     /**
