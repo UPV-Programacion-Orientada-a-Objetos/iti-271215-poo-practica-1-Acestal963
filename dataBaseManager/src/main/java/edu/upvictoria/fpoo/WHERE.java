@@ -1,5 +1,6 @@
 package edu.upvictoria.fpoo;
 
+
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,45 +13,54 @@ public class WHERE {
     }
 
     public boolean evaluateCondition(String[] row, String condition) {
-        // Preprocesar la condición para manejar los paréntesis y operadores
-        String processedCondition = processCondition(condition);
-        return evaluateExpression(row, processedCondition);
+        List<String> tokens = tokenize(normalizeCondition(condition));
+        return evaluateTokens(row, tokens);
     }
 
-    private String processCondition(String condition) {
-        // Reemplazar los operadores lógicos con el formato necesario para el análisis
-        return condition.replaceAll("\\s+(AND|OR)\\s+", " $1 ")
+    private String normalizeCondition(String condition) {
+        return condition.trim()
+                .replaceAll("\\s*(=|!=|<=|>=|<|>)\\s*", " $1 ")
+                .replaceAll("\\s+(AND|OR)\\s+", " $1 ")
                 .replaceAll("\\s*\\(\\s*", "(")
                 .replaceAll("\\s*\\)\\s*", ")");
     }
 
-    private boolean evaluateExpression(String[] row, String condition) {
+    private List<String> tokenize(String condition) {
+        List<String> tokens = new ArrayList<>();
+        Matcher matcher = Pattern.compile("\\w+|=|!=|<=|>=|<|>|\\(|\\)|AND|OR|\\'[^\\']*\\'|\"[^\"]*\"").matcher(condition);
+        while (matcher.find()) {
+            tokens.add(matcher.group().trim());
+        }
+        return tokens;
+    }
+
+    private boolean evaluateTokens(String[] row, List<String> tokens) {
         Deque<Boolean> values = new ArrayDeque<>();
         Deque<String> operators = new ArrayDeque<>();
 
-        // Añadir un espacio antes de cada paréntesis para tokenización
-        String conditionWithSpaces = condition.replaceAll("([()])", " $1 ");
-        List<String> tokens = tokenize(conditionWithSpaces);
-
-        for (String token : tokens) {
-            token = token.trim();
-
+        int i = 0;
+        while (i < tokens.size()) {
+            String token = tokens.get(i);
             if (token.equals("(")) {
                 operators.push(token);
             } else if (token.equals(")")) {
-                while (!operators.peek().equals("(")) {
+                while (!operators.isEmpty() && !operators.peek().equals("(")) {
                     applyOperator(values, operators.pop());
                 }
-                operators.pop();  // Remove the '('
+                operators.pop(); // Eliminar '('
             } else if (isOperator(token)) {
                 while (!operators.isEmpty() && precedence(token) <= precedence(operators.peek())) {
                     applyOperator(values, operators.pop());
                 }
                 operators.push(token);
             } else {
-                boolean currentValue = evaluateSimpleCondition(row, token);
-                values.push(currentValue);
+                StringBuilder condition = new StringBuilder(token);
+                while (i + 1 < tokens.size() && !isOperator(tokens.get(i + 1)) && !tokens.get(i + 1).equals("(") && !tokens.get(i + 1).equals(")")) {
+                    condition.append(" ").append(tokens.get(++i));
+                }
+                values.push(evaluateSimpleCondition(row, condition.toString()));
             }
+            i++;
         }
 
         while (!operators.isEmpty()) {
@@ -60,66 +70,54 @@ public class WHERE {
         return values.pop();
     }
 
-    private List<String> tokenize(String condition) {
-        List<String> tokens = new ArrayList<>();
-        Matcher matcher = Pattern.compile("\\S+|[()\\s]+").matcher(condition);
-        while (matcher.find()) {
-            String token = matcher.group().trim();
-            if (!token.isEmpty()) {
-                tokens.add(token);
-            }
-        }
-        return tokens;
-    }
-
     private boolean evaluateSimpleCondition(String[] row, String condition) {
-        // Tokenizar la condición en base a operadores
-        String[] parts = condition.split("(?<=[=<>!])|(?=[=<>!])");
-        if (parts.length != 3) {
-            throw new IllegalArgumentException("Invalid condition: " + condition);
+        Pattern pattern = Pattern.compile("(\\w+)\\s*(=|!=|<=|>=|<|>)\\s*(.*)");
+        Matcher matcher = pattern.matcher(condition);
+
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("Invalid condition format: " + condition);
         }
 
-        String column = parts[0].trim();
-        String operator = parts[1].trim();
-        String value = parts[2].trim().replaceAll("^'|'$", ""); // Remove surrounding single quotes
+        String column = matcher.group(1).trim();
+        String operator = matcher.group(2).trim();
+        String value = matcher.group(3).trim();
 
-        // Limpiar comillas dobles
-        value = value.replaceAll("^\"|\"$", "").replaceAll("\"\"", "\"");
+        value = value.replaceAll("^['\"]|['\"]$", "");
 
-        int colIndex = columnIndexMap.getOrDefault(column, -1);
-        if (colIndex == -1) {
+        if (!columnIndexMap.containsKey(column)) {
             System.out.println("Error: Column not found: " + column);
-            return false;  // or throw an exception if preferred
+            return false;
         }
 
+        int colIndex = columnIndexMap.get(column);
         String cellValue = row[colIndex].trim();
         return compare(cellValue, operator, value);
     }
 
     private boolean compare(String cellValue, String operator, String value) {
-        // Eliminar comillas simples y dobles
-        cellValue = cellValue.replaceAll("^'|'$", "").replaceAll("^\"|\"$", "").replaceAll("\"\"", "\"");
-        value = value.replaceAll("^'|'$", "").replaceAll("^\"|\"$", "").replaceAll("\"\"", "\"");
+        cellValue = cellValue.replaceAll("^['\"]|['\"]$", "");
+        value = value.replaceAll("^['\"]|['\"]$", "");
 
         try {
+            double cellValueNum = Double.parseDouble(cellValue);
+            double valueNum = Double.parseDouble(value);
             switch (operator) {
                 case "=":
-                    return cellValue.equals(value);
+                    return cellValueNum == valueNum;
                 case "!=":
-                    return !cellValue.equals(value);
+                    return cellValueNum != valueNum;
                 case "<":
-                    return Double.parseDouble(cellValue) < Double.parseDouble(value);
+                    return cellValueNum < valueNum;
                 case ">":
-                    return Double.parseDouble(cellValue) > Double.parseDouble(value);
+                    return cellValueNum > valueNum;
                 case "<=":
-                    return Double.parseDouble(cellValue) <= Double.parseDouble(value);
+                    return cellValueNum <= valueNum;
                 case ">=":
-                    return Double.parseDouble(cellValue) >= Double.parseDouble(value);
+                    return cellValueNum >= valueNum;
                 default:
                     throw new IllegalArgumentException("Unknown operator: " + operator);
             }
         } catch (NumberFormatException e) {
-            // Si ocurre una excepción de formato numérico, asumimos que estamos comparando cadenas
             switch (operator) {
                 case "=":
                     return cellValue.equals(value);
@@ -162,5 +160,19 @@ public class WHERE {
     private boolean isOperator(String token) {
         return token.equals("AND") || token.equals("OR");
     }
+
+    public static void main(String[] args) {
+        Map<String, Integer> columnIndexMap = new HashMap<>();
+        columnIndexMap.put("id", 0);
+        columnIndexMap.put("nombre", 1);
+
+        WHERE whereClause = new WHERE(columnIndexMap);
+
+        String[] row = {"3", "alejandro"};
+
+        boolean result = whereClause.evaluateCondition(row, "(id=3 AND nombre='alejandro')");
+        System.out.println("Result: " + result); // Debería ser true
+    }
 }
+
 

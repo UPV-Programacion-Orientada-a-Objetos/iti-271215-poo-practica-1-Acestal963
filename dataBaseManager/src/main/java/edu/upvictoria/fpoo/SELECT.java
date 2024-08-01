@@ -145,7 +145,6 @@ public class SELECT {
             System.out.println("Resultados de la búsqueda:");
             System.out.println(String.join("\t", header));
 
-            // Print matching rows
             for (String[] row : data.subList(1, data.size())) {
                 if (where.evaluateCondition(row, condition)) {
                     System.out.println(String.join("\t", row));
