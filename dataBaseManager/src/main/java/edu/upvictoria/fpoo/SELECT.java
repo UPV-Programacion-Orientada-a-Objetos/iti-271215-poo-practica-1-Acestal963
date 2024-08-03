@@ -158,7 +158,7 @@ public class SELECT {
     public void select(String path, String tableName) {
         List<String[]> data = loadData(path, tableName);
         if (data.isEmpty()) {
-            System.out.println("No data found for table: " + tableName);
+            //System.out.println("No data found for table: " + tableName);
             return;
         }
 

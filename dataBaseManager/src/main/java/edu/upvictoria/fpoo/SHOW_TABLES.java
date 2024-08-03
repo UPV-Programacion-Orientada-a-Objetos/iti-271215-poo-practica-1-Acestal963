@@ -7,8 +7,10 @@ public class SHOW_TABLES {
         File[] tablas=base_Datos.listFiles();
         if(tablas!=null){
             for(File tabla: tablas){
+                String fileName = tabla.getName();
                 if(!tabla.getName().contains("_")&&tabla.getName()!=null){
-                    System.out.println(tabla.getName());
+                    String tableName = fileName.substring(0, fileName.lastIndexOf('.'));
+                    System.out.println(tableName);
                 }
             }
         }else{

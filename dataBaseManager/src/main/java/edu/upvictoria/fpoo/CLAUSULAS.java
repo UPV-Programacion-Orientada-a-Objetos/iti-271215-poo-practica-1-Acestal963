@@ -21,7 +21,7 @@ public class CLAUSULAS {
                String [] path=sentencia[1].split(";");
                USE(path[0]);
                return true;
-           }else if(sentencia[0].toUpperCase().equals("SHOW")&&sentencia[1].toUpperCase().equals("TABLES;")){
+           }else if(sentencia[0].toUpperCase().equals("SHOW")&&sentencia[1].toUpperCase().equals("TABLES")){
                SHOW_TABLES(path$);
                return true;
            }else if(sentencia[0].toUpperCase().toUpperCase().equals("CREATE")){

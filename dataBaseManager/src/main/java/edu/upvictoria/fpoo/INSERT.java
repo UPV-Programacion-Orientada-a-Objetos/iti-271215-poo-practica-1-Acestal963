@@ -8,7 +8,7 @@ public class INSERT {
     public void INSERT(String path, String columnas, String datos, String tabla) {
         String path_table = path.endsWith("/") ? path + tabla + ".csv" : path + "/" + tabla + ".csv";
         File file = new File(path_table);
-        boolean isFileEmpty = !file.exists() || file.length() == 0; // Verifica si el archivo existe y si está vacío
+        boolean isFileEmpty = !file.exists() || file.length() == 0;
         try (FileWriter writer = new FileWriter(path_table, true)) {
             if (!isFileEmpty) {
                 writer.write("\n");
@@ -31,7 +31,7 @@ public class INSERT {
     public void INSERT(String path, String datos, String tabla) {
         String path_table = path.endsWith("/") ? path + tabla + ".csv" : path + "/" + tabla + ".csv";
         File file = new File(path_table);
-        boolean isFileEmpty = !file.exists() || file.length() == 0; // Verifica si el archivo existe y si está vacío
+        boolean isFileEmpty = !file.exists() || file.length() == 0;
         try (FileWriter writer = new FileWriter(path_table, true)) {
             if (!isFileEmpty) {
                 writer.write("\n");
