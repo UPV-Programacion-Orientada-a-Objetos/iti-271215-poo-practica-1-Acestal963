@@ -17,7 +17,7 @@ public class UPDATE {
             if (line != null) {
                 String[] headers = line.split("\t");
                 for (int i = 0; i < headers.length; i++) {
-                    columnIndices.put(headers[i].trim(), i);
+                    columnIndices.put(headers[i].trim().toUpperCase(), i);
                 }
                 newContent.append(line).append("\n"); // Agregar encabezados al nuevo contenido
             }
@@ -38,7 +38,7 @@ public class UPDATE {
                     for (Map.Entry<String, String> entry : updateValues.entrySet()) {
                         String columnName = entry.getKey();
                         String newValue = entry.getValue();
-                        Integer index = columnIndices.get(columnName);
+                        Integer index = columnIndices.get(columnName.toUpperCase());
                         if (index != null && index < fields.length) {
                             fields[index] = newValue;
                         }

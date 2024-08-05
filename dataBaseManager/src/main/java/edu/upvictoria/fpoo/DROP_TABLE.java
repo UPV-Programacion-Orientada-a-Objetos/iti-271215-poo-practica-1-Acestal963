@@ -4,7 +4,7 @@ import java.io.*;
 
 public class DROP_TABLE {
     public void drop(String path, String tabla) {
-        drop(path, tabla, null);
+        drop(path, tabla.toUpperCase(), null);
     }
 
     public void drop(String path, String tabla, String dec) {

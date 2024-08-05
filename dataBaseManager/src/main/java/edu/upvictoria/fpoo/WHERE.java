@@ -75,17 +75,17 @@ public class WHERE {
         Matcher matcher = pattern.matcher(condition);
 
         if (!matcher.matches()) {
-            throw new IllegalArgumentException("Invalid condition format: " + condition);
+            throw new IllegalArgumentException("Formato de condición inválido: " + condition);
         }
 
-        String column = matcher.group(1).trim();
+        String column = matcher.group(1).trim().toUpperCase();
         String operator = matcher.group(2).trim();
         String value = matcher.group(3).trim();
 
         value = value.replaceAll("^['\"]|['\"]$", "");
 
         if (!columnIndexMap.containsKey(column)) {
-            System.out.println("Error: Column not found: " + column);
+            System.out.println("Error: Columna no encontrada: " + column);
             return false;
         }
 
@@ -115,7 +115,7 @@ public class WHERE {
                 case ">=":
                     return cellValueNum >= valueNum;
                 default:
-                    throw new IllegalArgumentException("Unknown operator: " + operator);
+                    throw new IllegalArgumentException("Operador desconocido: " + operator);
             }
         } catch (NumberFormatException e) {
             switch (operator) {
@@ -141,7 +141,7 @@ public class WHERE {
                 result = left || right;
                 break;
             default:
-                throw new IllegalArgumentException("Unknown operator: " + operator);
+                throw new IllegalArgumentException("Operador Desconocido: " + operator);
         }
         values.push(result);
     }
@@ -161,18 +161,6 @@ public class WHERE {
         return token.equals("AND") || token.equals("OR");
     }
 
-    public static void main(String[] args) {
-        Map<String, Integer> columnIndexMap = new HashMap<>();
-        columnIndexMap.put("id", 0);
-        columnIndexMap.put("nombre", 1);
-
-        WHERE whereClause = new WHERE(columnIndexMap);
-
-        String[] row = {"3", "alejandro"};
-
-        boolean result = whereClause.evaluateCondition(row, "(id=3 AND nombre='alejandro')");
-        System.out.println("Result: " + result); // Debería ser true
-    }
 }
 
 

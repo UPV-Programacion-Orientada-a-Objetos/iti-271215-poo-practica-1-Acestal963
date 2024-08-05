@@ -62,13 +62,13 @@ public class SELECT {
 
         Map<String, Integer> columnIndexMap = new HashMap<>();
         for (int i = 0; i < header.length; i++) {
-            columnIndexMap.put(header[i].trim(), i);
+            columnIndexMap.put(header[i].trim().toUpperCase(), i);
         }
 
         boolean allColumnsFound = true;
 
         for (int j = 0; j < colum.length; j++) {
-            colum[j] = colum[j].trim();
+            colum[j] = colum[j].trim().toUpperCase();
             if (columnIndexMap.containsKey(colum[j])) {
                 colIndices[j] = columnIndexMap.get(colum[j]);
             } else {
@@ -120,14 +120,14 @@ public class SELECT {
     public void selectAll(String path, String tableName, String condition) {
         List<String[]> data = loadData(path, tableName);
         if (data.isEmpty()) {
-            System.out.println("No data found for table: " + tableName);
+            System.out.println("Tabla sin datos: " + tableName);
             return;
         }
 
         String[] header = data.get(0);
         Map<String, Integer> columnIndexMap = new HashMap<>();
         for (int i = 0; i < header.length; i++) {
-            columnIndexMap.put(header[i].trim(), i);
+            columnIndexMap.put(header[i].trim().toUpperCase(), i);
         }
 
         WHERE where = new WHERE(columnIndexMap);
@@ -192,17 +192,31 @@ public class SELECT {
                 if (!headerRead) {
                     header = datos;
                     for (int i = 0; i < datos.length; i++) {
-                        columnIndexMap.put(datos[i].trim(), i);
+                        columnIndexMap.put(datos[i].trim().toUpperCase(), i);
                     }
 
+                    boolean allColumnsFound = true;
                     for (int j = 0; j < colum.length; j++) {
-                        colum[j] = colum[j].trim();
+                        colum[j] = colum[j].trim().toUpperCase();
                         if (columnIndexMap.containsKey(colum[j])) {
                             colIndices[j] = columnIndexMap.get(colum[j]);
                         } else {
                             System.out.println("Columna no encontrada: " + colum[j]);
+                            allColumnsFound = false;
                         }
                     }
+
+                    if (!allColumnsFound) {
+                        return;
+                    }
+
+                    // Imprimir los nombres de las columnas seleccionadas
+                    for (int colIndex : colIndices) {
+                        if (colIndex != -1) {
+                            System.out.print(header[colIndex] + "\t");
+                        }
+                    }
+                    System.out.println();
 
                     headerRead = true;
                     continue;

@@ -59,11 +59,11 @@ public class CREATE {
         if (NO) {
             try {
                 File archiv = new File(tablas);
-                System.out.println(archiv.getAbsolutePath());
+                //System.out.println(archiv.getAbsolutePath());
                 if (archiv.createNewFile()) {
-                    System.out.println("TABLE CREATED");
+                    System.out.println("Tabla creada");
                 } else {
-                    System.out.println("OBJECT ALREADY EXISTS");
+                    System.out.println("Tabla ya existente");
                 }
 
                 try (FileWriter writer = new FileWriter(archiv)) {
@@ -98,9 +98,9 @@ public class CREATE {
         try {
             File tablaCSV = new File(tablaPath);
             if (tablaCSV.createNewFile()) {
-                System.out.println("Table file created");
+                System.out.println("Tabla creada");
             } else {
-                System.out.println("Table file already exists");
+                System.out.println("Tabla existente con ese nombre");
             }
             try (FileWriter writer = new FileWriter(tablaCSV)) {
                 String[] columna_individual = columnas.trim().split(",");
@@ -108,7 +108,7 @@ public class CREATE {
                     String[] dato = columna_individual[i].trim().split("\\s+");
                     writer.write(dato[0].toUpperCase()); // Convertir a mayúsculas
                     if (i < columna_individual.length - 1) {
-                        writer.write(",");
+                        writer.write("\t");
                     }
                 }
                 writer.write("\n");
