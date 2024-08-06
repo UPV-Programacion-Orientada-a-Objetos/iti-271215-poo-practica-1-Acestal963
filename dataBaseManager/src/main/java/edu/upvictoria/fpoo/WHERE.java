@@ -133,7 +133,7 @@ public class WHERE {
         boolean right = values.pop();
         boolean left = values.pop();
         boolean result;
-        switch (operator) {
+        switch (operator.toUpperCase()) {
             case "AND":
                 result = left && right;
                 break;
@@ -147,7 +147,7 @@ public class WHERE {
     }
 
     private int precedence(String operator) {
-        switch (operator) {
+        switch (operator.toUpperCase()) {
             case "AND":
                 return 2;
             case "OR":
@@ -158,6 +158,7 @@ public class WHERE {
     }
 
     private boolean isOperator(String token) {
+        token=token.toUpperCase();
         return token.equals("AND") || token.equals("OR");
     }
 
