@@ -28,6 +28,7 @@ public class DELETE {
                 String[] row = line.split("\t");
                 if (!where.evaluateCondition(row, condition)) {
                     newContent.append(line).append("\n");
+                    System.out.println("Fila eliminada");
                 }
             }
 

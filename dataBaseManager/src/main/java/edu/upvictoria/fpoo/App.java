@@ -7,17 +7,17 @@ import java.io.InputStreamReader;
  * Hello world!
  *
  */
-public class App 
-{
-    public static void main( String[] args )
-    {
-        boolean p=true;
-        boolean m=true;
+public class App {
+    public static void main(String[] args) {
+        boolean p = false;
+        boolean m = true;
         System.out.println("AL escribir las sentencias, escribala es una sola linea");
-        CLAUSULAS clausula=new CLAUSULAS();
+        CLAUSULAS clausula = new CLAUSULAS();
 
-        do {
-            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        StringBuilder sb = new StringBuilder();
+
+        while (m) {
             String entrada = null;
             try {
                 entrada = br.readLine();
@@ -26,27 +26,33 @@ public class App
             }
 
             if (entrada != null) {
-                String[] sentencias = entrada.split(";");
+                sb.append(entrada).append("\n");
+                if (entrada.trim().endsWith(";")) {
+                    String sentenciaCompleta = sb.toString().trim();
+                    sb.setLength(0); // Limpiar el StringBuilder
 
-                for (String sentencia : sentencias) {
-                    sentencia = sentencia.trim();
-                    if (sentencia.isEmpty()) continue;
+                    String[] sentencias = sentenciaCompleta.split(";");
 
-                    String[] en = sentencia.split(" ");
+                    for (String sentencia : sentencias) {
+                        sentencia = sentencia.trim();
+                        if (sentencia.isEmpty()) continue;
 
-                    if (p && !en[0].toUpperCase().equals("USE")) {
-                        System.out.println("Inicialice la base de datos");
-                        p = false;
-                    } else {
-                        clausula.clausula(sentencia);
-                    }
+                        String[] en = sentencia.split(" ");
 
-                    if (en[0].toUpperCase().equals("USE")) {
-                        p = false;
+                        if (p && !en[0].toUpperCase().equals("USE")) {
+                            System.out.println("Inicialice la base de datos");
+                            p = true;
+                        } else {
+                            clausula.clausula(sentencia);
+                        }
+
+                        /*if (en[0].toUpperCase().equals("USE")) {
+                            p = true;
+                        }*/
                     }
                 }
             }
-        } while (m);
+        }
 
     }
 }

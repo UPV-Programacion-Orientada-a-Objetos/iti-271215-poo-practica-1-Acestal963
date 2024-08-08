@@ -85,7 +85,7 @@ public class CREATE {
         if (m.find()) {
             return true;
         }
-        if (dato.equalsIgnoreCase("INT") || dato.equalsIgnoreCase("NUMERIC") || dato.equalsIgnoreCase("NUMBER") || dato.equalsIgnoreCase("CHAR")) {
+        if (dato.equalsIgnoreCase("INT") || dato.equalsIgnoreCase("NUMERIC") || dato.equalsIgnoreCase("NUMBER") || dato.equalsIgnoreCase("CHAR")|| dato.equalsIgnoreCase("FLOAT")) {
             return true;
         }
         return false;

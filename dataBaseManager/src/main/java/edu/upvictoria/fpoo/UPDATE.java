@@ -41,6 +41,7 @@ public class UPDATE {
                         Integer index = columnIndices.get(columnName.toUpperCase());
                         if (index != null && index < fields.length) {
                             fields[index] = newValue;
+                            System.out.println("Fila actualizada");
                         }
                     }
                     newContent.append(String.join("\t", fields)).append("\n");
